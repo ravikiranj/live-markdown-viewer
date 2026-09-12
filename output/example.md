@@ -2,6 +2,8 @@
 
 A split-pane markdown viewer with live reload, syntax highlighting, Mermaid diagrams, and light/dark themes. This document exercises every feature so it doubles as a visual test.
 
+> **Note:** The raw pane on the left is a read-only view, not an editor. The viewer polls this file on disk and overwrites both panes on every refresh, so edits typed into the UI are discarded. Edit the `.md` file on disk (with your editor or an external agent) and changes show up here automatically.
+
 ---
 
 ## Text Formatting

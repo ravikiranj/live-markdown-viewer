@@ -2,6 +2,8 @@
 
 A lightweight split-pane markdown viewer with live reload. Raw markdown on the left, rendered on the right, with a resizable divider.
 
+**Live demo:** https://ravikiranj.github.io/live-markdown-viewer/
+
 ## Quick Start
 
 ```bash
@@ -30,12 +32,17 @@ The UI auto-discovers `.md` files in `output/` via the server's directory listin
 
 The viewer fetches `GET /output/` which returns the server's HTML directory listing. It parses the `<a>` tags to find `.md` files and populates the dropdown. Content auto-refreshes at the selected interval with cache-busting.
 
+> **Note:** The raw markdown pane is a read-only view, not an editor. The viewer polls the source file on disk and overwrites both panes on every refresh, so anything typed into the UI is discarded on the next reload. Edit the `.md` file on disk (with your editor or an external agent) and the changes appear in the viewer automatically.
+
 ## Vendored Libraries
 
 | Library | Version | License |
 |---------|---------|---------|
 | [marked.js](https://github.com/markedjs/marked) | 15.0.12 | MIT |
-| [Bootstrap](https://getbootstrap.com/) | 5.3.3 | MIT |
+| [Bootstrap](https://getbootstrap.com/) (CSS) | 5.3.3 | MIT |
+| [highlight.js](https://highlightjs.org/) | 11.9.0 | BSD-3-Clause |
+| highlight.js GitHub themes (`hljs-github.min.css`, `hljs-github-dark.min.css`) | 11.9.0 | BSD-3-Clause |
+| [Mermaid](https://mermaid.js.org/) | see file header | MIT |
 
 ## File Structure
 
@@ -44,7 +51,11 @@ live-markdown-viewer/
   index.html
   app.js
   marked.min.js
+  highlight.min.js
+  mermaid.min.js
   bootstrap.min.css
+  hljs-github.min.css
+  hljs-github-dark.min.css
   README.md
   .gitignore
   output/           <- gitignored, put your .md files here
