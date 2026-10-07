@@ -18,10 +18,18 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 The UI auto-discovers `.md` files in `output/` via the server's directory listing.
 
+### Sharing a direct link
+
+The URL stays in sync with the file/theme/reload dropdowns, so the address bar is always a complete, shareable
+link: `?file=my-doc.md&theme=dark&reload=30000` (`file` also accepts the `output/` prefix). Precedence per
+setting: URL param > last value saved in this browser > built-in default. An unrecognized `theme`/`reload` value
+is ignored rather than applied.
+
 ## Features
 
 - Split pane: raw markdown (left) + rendered (right)
 - File selector dropdown (auto-discovers .md files in output/)
+- Shareable URL (`?file=`, `?theme=`, `?reload=`), synced with the dropdowns
 - Resizable center divider (drag to resize)
 - Configurable auto-refresh interval (5s/10s/30s/60s)
 - Bootstrap-styled tables

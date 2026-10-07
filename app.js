@@ -4,7 +4,41 @@ function log(msg) {
 }
 
 // Configuration
-let mdFile = localStorage.getItem('mdFile') || 'output/example.md';
+const urlParams = new URLSearchParams(window.location.search);
+
+function urlFileParam() {
+  const raw = urlParams.get('file');
+  if (!raw) {
+    return null;
+  }
+  // Accept both 'file=my-doc.md' and 'file=output/my-doc.md'.
+  return raw.startsWith('output/') ? raw : 'output/' + raw;
+}
+
+// Reads `name` from the URL query string, restricted to `allowed` values (case-sensitive exact match).
+// Falls back to null (caller then falls back to localStorage/default) on absent/unrecognized values.
+function urlParam(name, allowed) {
+  const raw = urlParams.get(name);
+  return raw && allowed.includes(raw) ? raw : null;
+}
+
+// Reflects `value` into the `name` query param, replacing the current history entry (no reload, no
+// extra back-button stop) so the address bar always matches what's on screen and is shareable as-is.
+function setUrlParam(name, value) {
+  const url = new URL(window.location.href);
+  url.searchParams.set(name, value);
+  history.replaceState(null, '', url);
+}
+
+let mdFile = urlFileParam() || localStorage.getItem('mdFile') || 'output/example.md';
+
+function setMdFile(file, { updateUrl = true } = {}) {
+  mdFile = file;
+  localStorage.setItem('mdFile', mdFile);
+  if (updateUrl) {
+    setUrlParam('file', mdFile.replace(/^output\//, ''));
+  }
+}
 
 // Discover .md files in output/ folder
 let lastFileList = '';
@@ -22,8 +56,7 @@ async function loadFileList() {
     }
     lastFileList = key;
     if (mdFiles.length > 0 && !mdFiles.includes(mdFile.replace('output/', ''))) {
-      mdFile = 'output/' + mdFiles[0];
-      localStorage.setItem('mdFile', mdFile);
+      setMdFile('output/' + mdFiles[0]);
       load();
     }
     const select = document.getElementById('fileSelect');
@@ -39,8 +72,7 @@ async function loadFileList() {
 }
 
 document.getElementById('fileSelect').addEventListener('change', (e) => {
-  mdFile = e.target.value;
-  localStorage.setItem('mdFile', mdFile);
+  setMdFile(e.target.value);
   lastMdContent = '';
   load();
 });
@@ -99,10 +131,16 @@ async function load() {
 }
 
 // Auto-refresh with configurable interval
-let timer = setInterval(load, 10000);
+const ALLOWED_INTERVALS = ['5000', '10000', '30000', '60000'];
+const initialInterval = urlParam('reload', ALLOWED_INTERVALS) || localStorage.getItem('reloadInterval') || '10000';
+document.getElementById('interval').value = initialInterval;
+
+let timer = setInterval(load, parseInt(initialInterval));
 document.getElementById('interval').addEventListener('change', (e) => {
   clearInterval(timer);
   timer = setInterval(load, parseInt(e.target.value));
+  localStorage.setItem('reloadInterval', e.target.value);
+  setUrlParam('reload', e.target.value);
 });
 
 loadFileList();
@@ -150,12 +188,13 @@ function applyTheme(theme) {
   }
 }
 
-const theme = localStorage.getItem('theme') || 'light';
+const theme = urlParam('theme', ['light', 'dark']) || localStorage.getItem('theme') || 'light';
 applyTheme(theme);
 document.getElementById('themeToggle').value = theme;
 
 document.getElementById('themeToggle').addEventListener('change', (e) => {
   localStorage.setItem('theme', e.target.value);
+  setUrlParam('theme', e.target.value);
   applyTheme(e.target.value);
   load();
 });
@@ -174,3 +213,9 @@ document.getElementById('copyRendered').addEventListener('click', () => {
   document.getElementById('copyRendered').textContent = 'Copied!';
   setTimeout(() => document.getElementById('copyRendered').textContent = 'Copy', 1500);
 });
+
+// Normalize the address bar to the full set of current params (file/theme/reload) even on a bare
+// load with none specified, so copying the URL at any point gives back a complete, shareable link.
+setUrlParam('file', mdFile.replace(/^output\//, ''));
+setUrlParam('reload', initialInterval);
+setUrlParam('theme', theme);
