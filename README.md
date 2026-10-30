@@ -42,6 +42,18 @@ The viewer fetches `GET /output/` which returns the server's HTML directory list
 
 > **Note:** The raw markdown pane is a read-only view, not an editor. The viewer polls the source file on disk and overwrites both panes on every refresh, so anything typed into the UI is discarded on the next reload. Edit the `.md` file on disk (with your editor or an external agent) and the changes appear in the viewer automatically.
 
+## Backing Up Old Docs
+
+`backup-docs.sh` moves older `.md` files out of `output/` into a backup folder so the file picker stays short.
+
+```bash
+./backup-docs.sh --dry-run             # show what would move
+./backup-docs.sh                       # move files not modified in the last 7 days
+./backup-docs.sh -d 30 -k notes.md     # 30 days, and always keep notes.md
+```
+
+`example.md` is always kept. Use `-k NAME` (repeatable) or `KEEP_FILES="a.md b.md"` to keep more files. Set `SRC_DIR` and `DEST_DIR` to change the folders (defaults: `./output` and `~/markdown-backup`). An existing file in the destination is never overwritten. Run with `-h` for all options.
+
 ## Vendored Libraries
 
 | Library | Version | License |
@@ -66,6 +78,7 @@ live-markdown-viewer/
   bootstrap.bundle.min.js
   hljs-github.min.css
   hljs-github-dark.min.css
+  backup-docs.sh
   README.md
   .gitignore
   output/           <- gitignored, put your .md files here
