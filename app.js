@@ -42,6 +42,58 @@ function setMdFile(file, { updateUrl = true } = {}) {
 
 // Discover .md files in output/ folder
 let lastFileList = '';
+let mdFiles = [];
+let fileListError = false;
+
+const fileButton = document.getElementById('fileButton');
+const fileSearch = document.getElementById('fileSearch');
+const fileListEl = document.getElementById('fileList');
+
+function sortByName(files) {
+  return [...files].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+}
+
+function setFileButtonText(text) {
+  fileButton.textContent = text;
+  fileButton.title = text;
+}
+
+function currentFileName() {
+  return mdFile.replace(/^output\//, '');
+}
+
+setFileButtonText(currentFileName());
+renderFileList();
+
+function renderFileList() {
+  const words = fileSearch.value.toLowerCase().split(/\s+/).filter(Boolean);
+  const matches = mdFiles.filter(f => words.every(w => f.toLowerCase().includes(w)));
+  fileListEl.replaceChildren();
+  if (matches.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'text-secondary small p-2';
+    empty.textContent = mdFiles.length > 0 ? 'No matches' : (fileListError ? 'Error listing files' : 'No .md files found');
+    fileListEl.appendChild(empty);
+    return;
+  }
+  matches.forEach(f => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'list-group-item list-group-item-action' + (('output/' + f) === mdFile ? ' active' : '');
+    item.textContent = f;
+    item.addEventListener('click', () => selectFile('output/' + f));
+    fileListEl.appendChild(item);
+  });
+}
+
+function selectFile(file) {
+  setMdFile(file);
+  lastMdContent = '';
+  setFileButtonText(currentFileName());
+  bootstrap.Dropdown.getOrCreateInstance(fileButton).hide();
+  load();
+}
+
 async function loadFileList() {
   try {
     const res = await fetch('output/');
@@ -49,32 +101,41 @@ async function loadFileList() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const links = [...doc.querySelectorAll('a')];
-    const mdFiles = links.map(a => a.textContent.trim()).filter(f => f.endsWith('.md'));
-    const key = mdFiles.join(',');
+    const files = sortByName(links.map(a => a.textContent.trim()).filter(f => f.endsWith('.md')));
+    const key = files.join(',');
     if (key === lastFileList) {
       return;
     }
     lastFileList = key;
+    mdFiles = files;
     if (mdFiles.length > 0 && !mdFiles.includes(mdFile.replace('output/', ''))) {
       setMdFile('output/' + mdFiles[0]);
       load();
     }
-    const select = document.getElementById('fileSelect');
-    select.innerHTML = mdFiles.map(f =>
-      '<option value="output/' + f + '"' + (('output/' + f) === mdFile ? ' selected' : '') + '>' + f + '</option>'
-    ).join('');
-    if (mdFiles.length === 0) {
-      select.innerHTML = '<option>No .md files found</option>';
-    }
+    fileListError = false;
+    setFileButtonText(currentFileName());
+    renderFileList();
   } catch (e) {
-    document.getElementById('fileSelect').innerHTML = '<option>Error listing files</option>';
+    fileListError = true;
+    setFileButtonText(currentFileName());
+    renderFileList();
   }
 }
 
-document.getElementById('fileSelect').addEventListener('change', (e) => {
-  setMdFile(e.target.value);
-  lastMdContent = '';
-  load();
+fileSearch.addEventListener('input', renderFileList);
+
+document.getElementById('filePanel').parentElement.addEventListener('shown.bs.dropdown', () => {
+  fileSearch.focus();
+  fileSearch.select();
+  const active = fileListEl.querySelector('.active');
+  if (active) {
+    active.scrollIntoView({ block: 'nearest' });
+  }
+});
+
+document.getElementById('filePanel').parentElement.addEventListener('hidden.bs.dropdown', () => {
+  fileSearch.value = '';
+  renderFileList();
 });
 
 // Markdown loading

@@ -18,10 +18,14 @@
 #renderedContent pre code { background: none; padding: 0; }
 #renderedContent code { background: var(--bs-tertiary-bg); padding: 0.2em 0.4em; border-radius: 3px; }
 #renderedContent table td { white-space: pre-line; }
+#fileButton { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-list { max-height: 60vh; overflow-y: auto; }
+.file-list .list-group-item { cursor: pointer; padding: 0.35rem 0.5rem; overflow-wrap: anywhere; }
 </style>
 <script src="marked.min.js" defer></script>
 <script src="highlight.min.js" defer></script>
 <script src="mermaid.min.js"></script>
+<script src="bootstrap.bundle.min.js" defer></script>
 <script src="app.js" defer></script>
 </head>
 <body>
@@ -34,9 +38,13 @@
 <option value="dark">Dark</option>
 </select>
 <label class="text-light small mb-0">File</label>
-<select id="fileSelect" class="form-select form-select-sm bg-secondary text-light border-0" style="width:auto">
-<option>Loading files...</option>
-</select>
+<div class="dropdown">
+<button id="fileButton" class="btn btn-sm btn-secondary dropdown-toggle text-start" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Loading files...</button>
+<div class="dropdown-menu p-2" id="filePanel" style="min-width:320px">
+<input type="search" id="fileSearch" class="form-control form-control-sm mb-2" placeholder="Search files..." autocomplete="off">
+<div id="fileList" class="list-group list-group-flush file-list"></div>
+</div>
+</div>
 <label class="text-light small mb-0">Reload</label>
 <select id="interval" class="form-select form-select-sm bg-secondary text-light border-0" style="width:auto">
 <option value="5000">5s</option>
